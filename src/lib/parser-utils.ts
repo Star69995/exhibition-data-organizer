@@ -71,7 +71,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     unmatched: [],
   };
 
-  // פירסור אמנים מורחב
+  // פירסור אמנים
   const artistBlocks = text.split(/אמנ\.ית\s*\d+/);
   if (artistBlocks.length > 1) {
     artistBlocks.slice(1).forEach(block => {
@@ -81,12 +81,12 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
         phone: extractValue(block, 'טלפון'),
         email: extractValue(block, 'מייל'),
         website: block.match(/https?:\/\/[^\s\n]+/)?.[0] || '',
-        instagram: '', // יתמלא בהמשך
+        instagram: '',
       });
     });
   }
 
-  // שיוך אינסטגרם לאמנים (לפי סדר)
+  // שיוך אינסטגרם
   const instaMatches = text.match(/@[\w\.]+/g);
   if (instaMatches) {
     instaMatches.forEach((handle, i) => {
@@ -94,20 +94,22 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  // פירסור הודעה לעיתונות (ניקוי כותרות הנחיה)
+  // פירסור וניקוי הודעה לעיתונות
   const pressFullMatch = text.match(/טקסט להודעה לעיתונות([\s\S]*?)(?=טקסט מקוצר|$)/);
   if (pressFullMatch) {
-    data.pressRelease.full = pressFullMatch[1]
-      .replace(/ההודעה לעיתונות[\s\S]*?מיוחדת\./, '')
-      .replace(/ההודעה לעיתונות מייצגת[\s\S]*?עם האוצר\./, '')
-      .trim();
+    let content = pressFullMatch[1];
+    // הסרת הנחיית ה"4-5 משפטים" עד "בתיאום עם האוצר"
+    content = content.replace(/ההודעה לעיתונות יכולה להיות[\s\S]*?בתיאום עם האוצר\./, '');
+    data.pressRelease.full = content.trim();
   }
 
+  // פירסור וניקוי טקסט מקוצר
   const pressShortMatch = text.match(/טקסט מקוצר להזמנה[\s\S]*?([^\n][\s\S]*?)(?=פרטי הדימויים|$)/);
   if (pressShortMatch) {
-    data.pressRelease.short = pressShortMatch[1]
-      .replace(/טקסט בין 2-4 משפטים[\s\S]*?צוות הגלריה\./, '')
-      .trim();
+    let content = pressShortMatch[1];
+    // הסרת הנחיית ה"2-4 משפטים" עד "על ידי צוות הגלריה"
+    content = content.replace(/טקסט בין 2-4 משפטים[\s\S]*?על ידי צוות הגלריה\./, '');
+    data.pressRelease.short = content.trim();
   }
 
   // פירסור דימויים
@@ -129,7 +131,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
   if (shiftText) data.shifts = shiftText[1].trim().split('\n').filter(l => l.trim());
 
   const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה'];
-  data.events = lines.filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 5 && !l.includes('כותרת'));
+  data.events = lines.filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 5 && !l.includes('כותרת') && !l.includes('כל תערוכה צריכה'));
 
   // שורות שלא סווגו
   const knownKeywords = ['שם', 'תאריך', 'אוצר', 'אמן', 'מייל', 'טלפון', 'אינסטגרם', 'דימוי', 'נגישות', 'משמרות', 'הודעה'];
