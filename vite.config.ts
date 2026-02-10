@@ -4,7 +4,8 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 export default defineConfig(() => ({
-  base: './', // שינוי לנתיב יחסי כדי שהנכסים ייטענו נכון ב-GitHub Pages
+  // הגדרה מפורשת של שם המאגר כדי ש-GitHub Pages ימצא את הקבצים
+  base: '/exhibition-data-organizer/', 
   server: {
     host: "::",
     port: 8080,
