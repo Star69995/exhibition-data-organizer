@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExhibitionData } from '@/lib/parser-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Image as ImageIcon, FileText, Clock, Info } from 'lucide-react';
 import { displaySettings } from '@/config/display-settings';
 import CopyButton from './CopyButton';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import SortableSection from './SortableSection';
 
 interface Props {
   data: ExhibitionData;
@@ -13,13 +29,21 @@ interface Props {
 const DataField = ({ label, value, isLong = false }: { label: string, value: string, isLong?: boolean }) => {
   if (!value) return null;
   return (
-    <div className={`group flex ${isLong ? 'flex-col' : 'items-center justify-between'} py-1 border-b border-slate-50 last:border-0`}>
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-slate-500">{label}:</span>
-        {!isLong && <span className="text-sm text-slate-900">{value}</span>}
+    <div className={`group flex ${isLong ? 'flex-col' : 'items-start justify-between'} py-2 border-b border-slate-50 last:border-0 gap-2`}>
+      <div className="flex items-start gap-2 flex-1 min-w-0">
+        <span className="text-sm font-semibold text-slate-500 shrink-0">{label}:</span>
+        {!isLong && (
+          <span className="text-sm text-slate-900 break-all overflow-hidden">
+            {value}
+          </span>
+        )}
       </div>
-      {isLong && <p className="text-sm text-slate-900 mt-1 whitespace-pre-wrap">{value}</p>}
-      <div className={`${isLong ? 'mt-2 self-end' : ''}`}>
+      {isLong && (
+        <p className="text-sm text-slate-900 mt-1 whitespace-pre-wrap text-justify leading-relaxed">
+          {value}
+        </p>
+      )}
+      <div className={`${isLong ? 'mt-2 self-end' : 'shrink-0'}`}>
         <CopyButton value={value} />
       </div>
     </div>
@@ -28,33 +52,62 @@ const DataField = ({ label, value, isLong = false }: { label: string, value: str
 
 const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   const { labels, sectionOrder } = displaySettings;
+  
+  const [sectionIds, setSectionIds] = useState<string[]>([]);
 
-  // מיון הסקשנים לפי ההגדרות
-  const sections = [
-    { id: 'exhibition', order: sectionOrder.exhibition },
-    { id: 'curator', order: sectionOrder.curator },
-    { id: 'artists', order: sectionOrder.artists },
-    { id: 'press', order: sectionOrder.press },
-    { id: 'images', order: sectionOrder.images },
-    { id: 'shifts', order: sectionOrder.shifts },
-    { id: 'unmatched', order: sectionOrder.unmatched },
-  ].sort((a, b) => a.order - b.order);
+  useEffect(() => {
+    const initialSections = [
+      { id: 'exhibition', order: sectionOrder.exhibition },
+      { id: 'curator', order: sectionOrder.curator },
+      { id: 'artists', order: sectionOrder.artists },
+      { id: 'press', order: sectionOrder.press },
+      { id: 'images', order: sectionOrder.images },
+      { id: 'shifts', order: sectionOrder.shifts },
+      { id: 'unmatched', order: sectionOrder.unmatched },
+    ]
+    .sort((a, b) => a.order - b.order)
+    .map(s => s.id);
+    
+    setSectionIds(initialSections);
+  }, [sectionOrder]);
 
-  const renderSection = (id: string) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setSectionIds((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const renderSectionContent = (id: string) => {
     switch (id) {
       case 'exhibition':
         return (
-          <div key={id} className="text-center space-y-2 mb-8">
+          <div className="text-center space-y-2 mb-8 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-center gap-3">
-              <h1 className="text-4xl font-bold text-primary">{data.exhibition.titleHeb || 'תערוכה חדשה'}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-primary break-words">{data.exhibition.titleHeb || 'תערוכה חדשה'}</h1>
               <CopyButton value={data.exhibition.titleHeb} />
             </div>
             <div className="flex items-center justify-center gap-2">
-              <p className="text-xl text-muted-foreground italic">{data.exhibition.titleEng}</p>
+              <p className="text-lg md:text-xl text-muted-foreground italic break-words">{data.exhibition.titleEng}</p>
               <CopyButton value={data.exhibition.titleEng} />
             </div>
             <div className="flex justify-center gap-4 mt-4">
-              <Badge variant="outline" className="text-lg py-1 px-4 flex items-center gap-2">
+              <Badge variant="outline" className="text-base md:text-lg py-1 px-4 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 {data.exhibition.openDate} - {data.exhibition.closeDate}
                 <CopyButton value={`${data.exhibition.openDate} - ${data.exhibition.closeDate}`} />
@@ -65,7 +118,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'curator':
         return (
-          <Card key={id} className="border-r-4 border-r-blue-500 shadow-sm">
+          <Card className="border-r-4 border-r-blue-500 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <User className="h-5 w-5 text-blue-500" />
@@ -85,7 +138,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'artists':
         return (
-          <Card key={id} className="border-r-4 border-r-purple-500 shadow-sm">
+          <Card className="border-r-4 border-r-purple-500 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <User className="h-5 w-5 text-purple-500" />
@@ -107,7 +160,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'press':
         return (
-          <Card key={id} className="border-r-4 border-r-green-500 shadow-sm col-span-full">
+          <Card className="border-r-4 border-r-green-500 shadow-sm w-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText className="h-5 w-5 text-green-500" />
@@ -120,7 +173,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
                   <h4 className="font-bold text-green-700">{labels.pressFull}:</h4>
                   <CopyButton value={data.pressRelease.full} />
                 </div>
-                <p className="text-sm leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100 whitespace-pre-wrap">
+                <p className="text-sm leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100 whitespace-pre-wrap text-justify">
                   {data.pressRelease.full}
                 </p>
               </div>
@@ -129,7 +182,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
                   <h4 className="font-bold text-green-700">{labels.pressShort}:</h4>
                   <CopyButton value={data.pressRelease.short} />
                 </div>
-                <p className="text-sm italic bg-green-50/30 p-4 rounded-lg border border-green-100 whitespace-pre-wrap">
+                <p className="text-sm italic bg-green-50/30 p-4 rounded-lg border border-green-100 whitespace-pre-wrap text-justify">
                   {data.pressRelease.short}
                 </p>
               </div>
@@ -139,7 +192,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'images':
         return (
-          <div key={id} className="col-span-full space-y-4">
+          <div className="w-full space-y-4">
             <h3 className="text-2xl font-bold flex items-center gap-2">
               <ImageIcon className="h-6 w-6 text-orange-500" />
               {labels.images || 'דימויים'}
@@ -150,7 +203,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-start gap-3">
                       <Badge className="bg-orange-500 shrink-0">{img.id}</Badge>
-                      <div className="flex-1 space-y-3">
+                      <div className="flex-1 space-y-3 min-w-0">
                         <DataField label={labels.imageDetailsHeb} value={img.detailsHeb} isLong />
                         <DataField label={labels.accessibilityHeb} value={img.accessibilityHeb} isLong />
                         <div className="pt-2 border-t border-orange-100">
@@ -168,7 +221,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'shifts':
         return (
-          <Card key={id} className="border-r-4 border-r-amber-500 shadow-sm">
+          <Card className="border-r-4 border-r-amber-500 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Clock className="h-5 w-5 text-amber-500" />
@@ -190,7 +243,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'unmatched':
         return (
-          <Card key={id} className="border-r-4 border-r-gray-400 bg-gray-50 shadow-sm">
+          <Card className="border-r-4 border-r-gray-400 bg-gray-50 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Info className="h-5 w-5 text-gray-500" />
@@ -202,7 +255,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
                 {data.unmatched.length > 0 ? (
                   data.unmatched.map((line, i) => (
                     <div key={i} className="flex items-center justify-between gap-2">
-                      <p className="flex-1">• {line}</p>
+                      <p className="flex-1 break-words">• {line}</p>
                       <CopyButton value={line} />
                     </div>
                   ))
@@ -221,9 +274,24 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" dir="rtl">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {sections.map(section => renderSection(section.id))}
-      </div>
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext 
+          items={sectionIds}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex flex-col gap-6">
+            {sectionIds.map(id => (
+              <SortableSection key={id} id={id}>
+                {renderSectionContent(id)}
+              </SortableSection>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };
