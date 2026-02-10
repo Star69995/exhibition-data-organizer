@@ -71,9 +71,9 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-slate-100">
-          <CMSField label={labels.catalogOrder} value={catalogOrder} description="פורמט: YYMMDD (לפי תאריך פתיחה)" />
           <CMSField label={labels.slug} value={slug} description="סיומת מקוצרת של הלינק (באנגלית)" />
           <CMSField label={labels.googleTitle} value={data.exhibition.titleHeb} description="בעברית ומולטי-לינגואל לתרגום לאנגלית" />
+          <CMSField label={labels.catalogOrder} value={catalogOrder} description="פורמט: YYMMDD (לפי תאריך פתיחה)" />
           <CMSField label={labels.galleryCaption} value={galleryCaption} description="שם התערוכה | אוצר: שם מלא | תאריך" />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
