@@ -45,7 +45,7 @@ export default defineConfig({
 ### 2. התקנת חבילת פריסה
 הרץ את הפקודה הבאה כדי להתקין את כלי הפריסה:
 ```bash
-npm install gh-pages --save-dev
+pnpm install --save-dev gh-pages
 ```
 
 ### 3. עדכון scripts ב-package.json
