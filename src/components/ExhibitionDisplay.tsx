@@ -39,7 +39,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         <CardHeader className="bg-slate-50/50">
           <CardTitle className="flex items-center gap-2 text-lg text-sky-700 font-bold">
             <Layout className="h-5 w-5" />
-            Wix CMS - הגדרות דף (צילום 1)
+            Wix CMS - הגדרות דף
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-slate-100">
@@ -54,7 +54,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         <CardHeader className="bg-slate-50/50">
           <CardTitle className="flex items-center gap-2 text-lg text-blue-800 font-bold">
             <ImageIcon className="h-5 w-5" />
-            Wix CMS - תצוגה וכותרות (צילום 2)
+            Wix CMS - תצוגה וכותרות
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-slate-100">
@@ -75,7 +75,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         <CardHeader className="bg-slate-50/50">
           <CardTitle className="flex items-center gap-2 text-lg text-indigo-800 font-bold">
             <Users className="h-5 w-5" />
-            Wix CMS - שמות ותוכן (צילום 3)
+            Wix CMS - שמות ותוכן
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-slate-100">
@@ -90,7 +90,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         <CardHeader className="bg-slate-50/50">
           <CardTitle className="flex items-center gap-2 text-lg text-purple-800 font-bold">
             <CalendarDays className="h-5 w-5" />
-            Wix CMS - אירוע מיוחד (צילום 4)
+            Wix CMS - אירוע מיוחד
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -108,7 +108,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         </CardHeader>
         <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
           <CMSField label="הודעה לעיתונות מלאה" value={data.pressRelease.full} isLong />
-          <CMSField label="טקסט מקוצר (לרשימת תפוצה)" value={data.pressRelease.short} isLong />
+          <CMSField label="טקסט מקוצר" value={data.pressRelease.short} isLong />
         </CardContent>
       </Card>
 
