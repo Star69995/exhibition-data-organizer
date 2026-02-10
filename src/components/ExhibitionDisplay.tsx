@@ -4,7 +4,7 @@ import React from 'react';
 import { ExhibitionData } from '@/lib/parser-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Layout, FileText, Users, CalendarDays, Info } from 'lucide-react';
+import { Layout, FileText, Users, CalendarDays, Info, AlertCircle } from 'lucide-react';
 import { displaySettings } from '@/config/display-settings';
 import CopyButton from './CopyButton';
 
@@ -31,12 +31,10 @@ const CMSField = ({ label, value, description, isLong = false }: { label: string
 const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   const { labels } = displaySettings;
 
-  // פונקציה לניקוי והמרת תאריך לפורמט עם נקודות
   const formatDateWithDots = (dateStr: string) => {
     return dateStr.replace(/\//g, '.');
   };
 
-  // פונקציה להמרת תאריך לפורמט YYMMDD
   const formatCatalogOrder = (dateStr: string) => {
     if (!dateStr) return '';
     const parts = dateStr.match(/\d+/g);
@@ -52,14 +50,18 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
     return `${year}${month}${day}`;
   };
 
-  // חישוב שדות מורכבים
   const catalogOrder = formatCatalogOrder(data.exhibition.openDate);
   const slug = data.exhibition.titleEng.toLowerCase().replace(/\s+/g, '-');
   const openDateDots = formatDateWithDots(data.exhibition.openDate);
   const closeDateDots = formatDateWithDots(data.exhibition.closeDate);
   
   const galleryCaption = `${data.exhibition.titleHeb} | אוצרת: ${data.curator.nameHeb} | ${openDateDots}`;
-  const artistNamesFormatted = data.artists.map(a => a.nameHeb).join(' | ');
+  
+  // פורמט אמנים: שם | שם |
+  const artistNamesFormatted = data.artists.length > 0 
+    ? data.artists.map(a => a.nameHeb).join(' | ') + ' |'
+    : '';
+    
   const curatorFormatted = data.curator.nameHeb ? `אוצרת: ${data.curator.nameHeb}` : '';
   
   const openingEvent = data.unmatched.find(l => l.includes('פתיחה') || l.includes('אירוע')) || '';
@@ -102,7 +104,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
           <CMSField 
             label={labels.artistNames} 
             value={artistNamesFormatted} 
-            description="להפריד שם של כל אמן עם קו | כזה ולשים עוד קו בסוף המשפט" 
+            description="שמות בעברית בלבד, מופרדים ב-| עם קו בסוף" 
             isLong 
           />
           <CMSField label={labels.curatorName} value={curatorFormatted} isLong />
@@ -128,7 +130,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         </CardContent>
       </Card>
 
-      {/* קבוצה 4: טקסטים ודימויים (לצרכי העתקה כלליים) */}
+      {/* קבוצה 4: טקסטים ודימויים */}
       <Card className="shadow-md border-t-4 border-t-green-500">
         <CardHeader className="bg-slate-50/50">
           <CardTitle className="flex items-center gap-2 text-lg text-green-700">
@@ -161,6 +163,28 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* קבוצה 5: נתונים שלא סווגו (גיבוי) */}
+      {data.unmatched.length > 0 && (
+        <Card className="shadow-md border-t-4 border-t-slate-400 bg-slate-50/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg text-slate-600">
+              <AlertCircle className="h-5 w-5" />
+              נתונים שלא סווגו (טקסט גולמי נוסף)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {data.unmatched.map((line, i) => (
+                <div key={i} className="flex items-center justify-between p-2 bg-white rounded border border-slate-100 text-sm">
+                  <span className="truncate ml-4">{line}</span>
+                  <CopyButton value={line} />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
     </div>
   );
