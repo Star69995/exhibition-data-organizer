@@ -13,16 +13,20 @@ interface Props {
 }
 
 const CMSField = ({ label, value, description, isLong = false }: { label: string, value: string, description?: string, isLong?: boolean }) => {
-  if (!value && !isLong) return null;
+  // ניקוי ירידות שורה ורווחים מהתחלה ומהסוף
+  const trimmedValue = value?.trim() || '';
+  
+  if (!trimmedValue && !isLong) return null;
+  
   return (
     <div className="group flex flex-col gap-1.5 py-4 border-b border-slate-100 last:border-0">
       <div className="flex items-center justify-between">
         <label className="text-sm font-bold text-slate-700">{label}</label>
-        <CopyButton value={value} />
+        <CopyButton value={trimmedValue} />
       </div>
       {description && <p className="text-xs text-slate-400 mb-1">{description}</p>}
       <div className={`p-3 bg-slate-50 rounded-md border border-slate-200 text-sm text-slate-900 ${isLong ? 'min-h-[80px] whitespace-pre-wrap text-justify leading-relaxed' : 'break-all'}`}>
-        {value || <span className="text-slate-300 italic">אין נתונים</span>}
+        {trimmedValue || <span className="text-slate-300 italic">אין נתונים</span>}
       </div>
     </div>
   );
@@ -57,15 +61,21 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   
   const galleryCaption = `${data.exhibition.titleHeb} | אוצרת: ${data.curator.nameHeb} | ${openDateDots}`;
   
-  // פורמט אמנים: שם | שם |
   const artistNamesFormatted = data.artists.length > 0 
     ? data.artists.map(a => a.nameHeb).join(' | ') + ' |'
     : '';
     
   const curatorFormatted = data.curator.nameHeb ? `אוצרת: ${data.curator.nameHeb}` : '';
   
+  // זיהוי אירועים מתוך הטקסט שלא סווג
   const openingEvent = data.unmatched.find(l => l.includes('פתיחה') || l.includes('אירוע')) || '';
-  const specialEvents = data.unmatched.filter(l => (l.includes('שיח') || l.includes('סיור'))).join('\n') || '';
+  
+  // שיפור זיהוי אירועים מיוחדים (שיח, הופעה, סיור וכו')
+  const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'סדנה'];
+  const specialEvents = data.unmatched
+    .filter(l => eventKeywords.some(key => l.includes(key)))
+    .join('\n')
+    .trim();
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20" dir="rtl">
@@ -130,36 +140,18 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
         </CardContent>
       </Card>
 
-      {/* קבוצה 4: טקסטים ודימויים */}
+      {/* קבוצה 4: טקסטים להודעה לעיתונות */}
       <Card className="shadow-md border-t-4 border-t-green-500">
         <CardHeader className="bg-slate-50/50">
           <CardTitle className="flex items-center gap-2 text-lg text-green-700">
             <FileText className="h-5 w-5" />
-            טקסטים להודעה לעיתונות ודימויים
+            טקסטים להודעה לעיתונות
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CMSField label={labels.pressFull} value={data.pressRelease.full} isLong />
             <CMSField label={labels.pressShort} value={data.pressRelease.short} isLong />
-          </div>
-          
-          <Separator />
-          
-          <div className="space-y-4">
-            <h4 className="font-bold flex items-center gap-2"><Info className="h-4 w-4" /> פרטי דימויים לנגישות:</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.images.map(img => (
-                <div key={img.id} className="p-3 bg-slate-50 rounded border border-slate-200 text-xs space-y-2">
-                  <div className="flex justify-between font-bold">
-                    <span>דימוי {img.id}</span>
-                    <CopyButton value={`${img.detailsHeb}\n${img.accessibilityHeb}`} />
-                  </div>
-                  <p><strong>עברית:</strong> {img.detailsHeb}</p>
-                  <p><strong>נגישות:</strong> {img.accessibilityHeb}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -185,6 +177,35 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* קבוצה 6: פרטי דימויים (אחרון) */}
+      <Card className="shadow-md border-t-4 border-t-rose-500">
+        <CardHeader className="bg-slate-50/50">
+          <CardTitle className="flex items-center gap-2 text-lg text-rose-700">
+            <Info className="h-5 w-5" />
+            פרטי דימויים לנגישות
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.images.map(img => (
+              <div key={img.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm space-y-3">
+                <div className="flex justify-between items-center font-bold border-b pb-2">
+                  <span className="text-rose-600">דימוי {img.id}</span>
+                  <CopyButton value={`${img.detailsHeb}\n${img.accessibilityHeb}`} />
+                </div>
+                <div className="space-y-2">
+                  <p><strong className="text-slate-600">עברית:</strong> {img.detailsHeb}</p>
+                  <p><strong className="text-slate-600">נגישות:</strong> {img.accessibilityHeb}</p>
+                </div>
+              </div>
+            ))}
+            {data.images.length === 0 && (
+              <p className="text-slate-400 italic text-center col-span-full py-4">לא נמצאו פרטי דימויים</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
     </div>
   );
