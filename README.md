@@ -1,4 +1,4 @@
-# מעבד נתוני תערוכות | Exhibition Data Processor 🎨
+# מארגן נתוני תערוכות | Exhibition Data Organizer 🎨
 
 כלי אוטומטי המיועד לאוצרים וגלריות, המאפשר להפוך טקסט גולמי (מקבצי Word או הדבקה חופשית) לנתונים מאורגנים המוכנים להזנה ישירה למערכות ניהול תוכן (כמו Wix CMS).
 
