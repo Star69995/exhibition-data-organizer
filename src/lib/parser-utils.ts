@@ -2,30 +2,9 @@
  * פונקציה לניקוי טקסט והוצאת ערך לפי תווית
  */
 export const extractValue = (text: string, label: string): string => {
-  const regex = new RegExp(`${label}\\s*[:\\-]?\\s*(.*)`, 'i');
+  const regex = new RegExp(`${label}\\s*[:\\-]?\\s*([^\\n]*)`, 'i');
   const match = text.match(regex);
   return match ? match[1].trim() : '';
-};
-
-/**
- * פונקציה לזיהוי רשימות (כמו דימויים או משמרות)
- */
-export const extractList = (text: string, startMarker: string, endMarker?: string): string[] => {
-  const startIndex = text.indexOf(startMarker);
-  if (startIndex === -1) return [];
-  
-  let relevantText = text.substring(startIndex + startMarker.length);
-  if (endMarker) {
-    const endIndex = relevantText.indexOf(endMarker);
-    if (endIndex !== -1) {
-      relevantText = relevantText.substring(0, endIndex);
-    }
-  }
-  
-  return relevantText
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0 && !line.includes('לחץ או הקש'));
 };
 
 export interface ExhibitionData {
@@ -49,6 +28,7 @@ export interface ExhibitionData {
     phone: string;
     email: string;
     website: string;
+    instagram: string;
   }>;
   pressRelease: {
     full: string;
@@ -62,6 +42,7 @@ export interface ExhibitionData {
     accessibilityEng: string;
   }>;
   shifts: string[];
+  events: string[];
   unmatched: string[];
 }
 
@@ -80,59 +61,83 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
       phone: extractValue(text, 'טלפון'),
       email: extractValue(text, 'מייל'),
       instagram: extractValue(text, 'אינסטגרם'),
-      website: extractValue(text, 'קישור לאתר האוצר'),
+      website: extractValue(text, 'אתר האוצר'),
     },
     artists: [],
-    pressRelease: {
-      full: '',
-      short: '',
-    },
+    pressRelease: { full: '', short: '' },
     images: [],
-    shifts: extractList(text, 'תאריכי משמרות'),
+    shifts: [],
+    events: [],
     unmatched: [],
   };
 
-  // פירסור אמנים (לפי מבנה אמנ.ית X)
-  const artistMatches = text.matchAll(/אמנ\.ית\s*(\d+)([\s\S]*?)(?=אמנ\.ית|$|אינסטגרם)/g);
-  for (const match of artistMatches) {
-    const artistBlock = match[2];
-    data.artists.push({
-      nameHeb: extractValue(artistBlock, 'שם בעברית'),
-      nameEng: extractValue(artistBlock, 'שם באנגלית'),
-      phone: extractValue(artistBlock, 'טלפון'),
-      email: extractValue(artistBlock, 'מייל'),
-      website: extractValue(artistBlock, 'קישור לאתר האמן'),
+  // פירסור אמנים מורחב
+  const artistBlocks = text.split(/אמנ\.ית\s*\d+/);
+  if (artistBlocks.length > 1) {
+    artistBlocks.slice(1).forEach(block => {
+      data.artists.push({
+        nameHeb: extractValue(block, 'שם בעברית'),
+        nameEng: extractValue(block, 'שם באנגלית'),
+        phone: extractValue(block, 'טלפון'),
+        email: extractValue(block, 'מייל'),
+        website: block.match(/https?:\/\/[^\s\n]+/)?.[0] || '',
+        instagram: '', // יתמלא בהמשך
+      });
     });
   }
 
-  // פירסור הודעה לעיתונות
-  const pressFull = text.match(/טקסט להודעה לעיתונות([\s\S]*?)(?=טקסט מקוצר|$)/);
-  if (pressFull) data.pressRelease.full = pressFull[1].trim().split('\n').filter(l => !l.includes('ההודעה לעיתונות')).join('\n');
+  // שיוך אינסטגרם לאמנים (לפי סדר)
+  const instaMatches = text.match(/@[\w\.]+/g);
+  if (instaMatches) {
+    instaMatches.forEach((handle, i) => {
+      if (data.artists[i]) data.artists[i].instagram = handle;
+    });
+  }
 
-  const pressShort = text.match(/טקסט מקוצר להזמנה לרשימת התפוצה([\s\S]*?)(?=פרטי הדימויים|$)/);
-  if (pressShort) data.pressRelease.short = pressShort[1].trim().split('\n').filter(l => !l.includes('טקסט בין')).join('\n');
+  // פירסור הודעה לעיתונות (ניקוי כותרות הנחיה)
+  const pressFullMatch = text.match(/טקסט להודעה לעיתונות([\s\S]*?)(?=טקסט מקוצר|$)/);
+  if (pressFullMatch) {
+    data.pressRelease.full = pressFullMatch[1]
+      .replace(/ההודעה לעיתונות[\s\S]*?מיוחדת\./, '')
+      .replace(/ההודעה לעיתונות מייצגת[\s\S]*?עם האוצר\./, '')
+      .trim();
+  }
+
+  const pressShortMatch = text.match(/טקסט מקוצר להזמנה[\s\S]*?([^\n][\s\S]*?)(?=פרטי הדימויים|$)/);
+  if (pressShortMatch) {
+    data.pressRelease.short = pressShortMatch[1]
+      .replace(/טקסט בין 2-4 משפטים[\s\S]*?צוות הגלריה\./, '')
+      .trim();
+  }
 
   // פירסור דימויים
-  const imageMatches = text.matchAll(/(\d+)\.\s*א\.\s*פרטי הדימוי בעברית([\s\S]*?)(?=\d+\.|$|תאריכי משמרות)/g);
-  for (const match of imageMatches) {
-    const id = match[1];
-    const block = match[2];
-    data.images.push({
-      id,
-      detailsHeb: extractValue(block, 'א. פרטי הדימוי בעברית'),
-      accessibilityHeb: extractValue(block, 'ב. תיאור נגישות'),
-      detailsEng: extractValue(block, 'ג. פרטי הדימוי באנגלית'),
-      accessibilityEng: extractValue(block, 'ד. תיאור נגישות באנגלית'),
+  const imageBlocks = text.split(/\d+\.\s*א\.\s*פרטי הדימוי/);
+  if (imageBlocks.length > 1) {
+    imageBlocks.slice(1).forEach((block, i) => {
+      data.images.push({
+        id: (i + 1).toString(),
+        detailsHeb: block.split('ב. תיאור נגישות')[0].trim(),
+        accessibilityHeb: (block.match(/ב\. תיאור נגישות([\s\S]*?)(?=ג\.)/) || [])[1]?.trim() || '',
+        detailsEng: (block.match(/ג\. פרטי הדימוי באנגלית([\s\S]*?)(?=ד\.)/) || [])[1]?.trim() || '',
+        accessibilityEng: (block.match(/ד\. תיאור נגישות באנגלית([\s\S]*?)(?=\d+\.|$)/) || [])[1]?.trim() || '',
+      });
     });
   }
 
-  // זיהוי שורות שלא נכנסו לקטגוריות (פשוט מאוד - כל מה שלא ריק ולא כותרת מוכרת)
-  const knownKeywords = ['שם התערוכה', 'תאריך', 'אוצר', 'אמן', 'מייל', 'טלפון', 'אינסטגרם', 'דימוי', 'נגישות', 'משמרות', 'הודעה לעיתונות'];
+  // משמרות ואירועים
+  const shiftText = text.match(/תאריכי משמרות([\s\S]*?)(?=אירוע שיח|$)/);
+  if (shiftText) data.shifts = shiftText[1].trim().split('\n').filter(l => l.trim());
+
+  const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה'];
+  data.events = lines.filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 5 && !l.includes('כותרת'));
+
+  // שורות שלא סווגו
+  const knownKeywords = ['שם', 'תאריך', 'אוצר', 'אמן', 'מייל', 'טלפון', 'אינסטגרם', 'דימוי', 'נגישות', 'משמרות', 'הודעה'];
   data.unmatched = lines.filter(line => {
     const trimmed = line.trim();
-    if (trimmed.length < 5) return false;
+    if (trimmed.length < 10) return false;
     return !knownKeywords.some(key => trimmed.includes(key));
-  }).slice(0, 10); // הגבלה כדי לא להציף
+  }).slice(0, 15);
 
   return data;
 };
