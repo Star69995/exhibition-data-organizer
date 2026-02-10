@@ -15,14 +15,14 @@
 
 כדי להריץ את הפרויקט אצלך במחשב, עקוב אחר הצעדים הבאים:
 
-1. **דרישות קדם:** וודא שמותקן אצלך [Node.js](https://nodejs.org/) (גרסה 18 ומעלה).
+1. **דרישות קדם:** וודא שמותקן אצלך [Node.js](https://nodejs.org/) ו-[pnpm](https://pnpm.io/).
 2. **התקנת תלויות:**
    ```bash
-   npm install
+   pnpm install
    ```
 3. **הרצה במצב פיתוח:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 4. **צפייה באפליקציה:** פתח את הדפדפן בכתובת: `http://localhost:8080`
 
@@ -42,24 +42,18 @@ export default defineConfig({
 });
 ```
 
-### 2. התקנת חבילת פריסה
-הרץ את הפקודה הבאה כדי להתקין את כלי הפריסה:
+### 2. התקנת חבילת פריסה (אם טרם הותקנה)
+הרץ את הפקודה הבאה:
 ```bash
 pnpm install --save-dev gh-pages
 ```
 
-### 3. עדכון scripts ב-package.json
-הוסף את השורות הבאות תחת `scripts`:
-```json
-"predeploy": "npm run build",
-"deploy": "gh-pages -d dist"
-```
-
-### 4. פריסה לאוויר
+### 3. פריסה לאוויר
 הרץ את הפקודה הבאה:
 ```bash
-npm run deploy
+pnpm deploy
 ```
+*(שים לב: הפקודה תריץ אוטומטית build לפני הפריסה הודות לסקריפט ה-predeploy)*
 
 לאחר סיום הפעולה, האתר יהיה זמין בכתובת: `https://your-username.github.io/your-repo-name/`
 
