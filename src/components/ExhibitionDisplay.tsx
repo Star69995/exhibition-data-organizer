@@ -1,26 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ExhibitionData } from '@/lib/parser-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Image as ImageIcon, FileText, Clock, Info } from 'lucide-react';
 import { displaySettings } from '@/config/display-settings';
 import CopyButton from './CopyButton';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import SortableSection from './SortableSection';
 
 interface Props {
   data: ExhibitionData;
@@ -52,52 +36,23 @@ const DataField = ({ label, value, isLong = false }: { label: string, value: str
 
 const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   const { labels, sectionOrder } = displaySettings;
-  
-  const [sectionIds, setSectionIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    const initialSections = [
-      { id: 'exhibition', order: sectionOrder.exhibition },
-      { id: 'curator', order: sectionOrder.curator },
-      { id: 'artists', order: sectionOrder.artists },
-      { id: 'press', order: sectionOrder.press },
-      { id: 'images', order: sectionOrder.images },
-      { id: 'shifts', order: sectionOrder.shifts },
-      { id: 'unmatched', order: sectionOrder.unmatched },
-    ]
-    .sort((a, b) => a.order - b.order)
-    .map(s => s.id);
-    
-    setSectionIds(initialSections);
-  }, [sectionOrder]);
+  // מיון הסקשנים לפי ההגדרות בקובץ ה-JSON
+  const sections = [
+    { id: 'exhibition', order: sectionOrder.exhibition },
+    { id: 'curator', order: sectionOrder.curator },
+    { id: 'artists', order: sectionOrder.artists },
+    { id: 'press', order: sectionOrder.press },
+    { id: 'images', order: sectionOrder.images },
+    { id: 'shifts', order: sectionOrder.shifts },
+    { id: 'unmatched', order: sectionOrder.unmatched },
+  ].sort((a, b) => a.order - b.order);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setSectionIds((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  const renderSectionContent = (id: string) => {
+  const renderSection = (id: string) => {
     switch (id) {
       case 'exhibition':
         return (
-          <div className="text-center space-y-2 mb-8 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+          <div key={id} className="text-center space-y-2 mb-8 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
             <div className="flex items-center justify-center gap-3">
               <h1 className="text-3xl md:text-4xl font-bold text-primary break-words">{data.exhibition.titleHeb || 'תערוכה חדשה'}</h1>
               <CopyButton value={data.exhibition.titleHeb} />
@@ -118,7 +73,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'curator':
         return (
-          <Card className="border-r-4 border-r-blue-500 shadow-sm h-full">
+          <Card key={id} className="border-r-4 border-r-blue-500 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <User className="h-5 w-5 text-blue-500" />
@@ -138,7 +93,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'artists':
         return (
-          <Card className="border-r-4 border-r-purple-500 shadow-sm h-full">
+          <Card key={id} className="border-r-4 border-r-purple-500 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <User className="h-5 w-5 text-purple-500" />
@@ -160,7 +115,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'press':
         return (
-          <Card className="border-r-4 border-r-green-500 shadow-sm w-full">
+          <Card key={id} className="border-r-4 border-r-green-500 shadow-sm w-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText className="h-5 w-5 text-green-500" />
@@ -192,7 +147,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'images':
         return (
-          <div className="w-full space-y-4">
+          <div key={id} className="w-full space-y-4">
             <h3 className="text-2xl font-bold flex items-center gap-2">
               <ImageIcon className="h-6 w-6 text-orange-500" />
               {labels.images || 'דימויים'}
@@ -221,7 +176,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'shifts':
         return (
-          <Card className="border-r-4 border-r-amber-500 shadow-sm h-full">
+          <Card key={id} className="border-r-4 border-r-amber-500 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Clock className="h-5 w-5 text-amber-500" />
@@ -243,7 +198,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
       case 'unmatched':
         return (
-          <Card className="border-r-4 border-r-gray-400 bg-gray-50 shadow-sm h-full">
+          <Card key={id} className="border-r-4 border-r-gray-400 bg-gray-50 shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Info className="h-5 w-5 text-gray-500" />
@@ -274,24 +229,9 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" dir="rtl">
-      <DndContext 
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext 
-          items={sectionIds}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="flex flex-col gap-6">
-            {sectionIds.map(id => (
-              <SortableSection key={id} id={id}>
-                {renderSectionContent(id)}
-              </SortableSection>
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+      <div className="flex flex-col gap-6">
+        {sections.map(section => renderSection(section.id))}
+      </div>
     </div>
   );
 };
