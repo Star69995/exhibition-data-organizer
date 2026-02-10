@@ -31,13 +31,31 @@ const CMSField = ({ label, value, description, isLong = false }: { label: string
 const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   const { labels } = displaySettings;
 
-  // חישוב שדות מורכבים לפי התמונות
+  // פונקציה להמרת תאריך לפורמט YYMMDD
+  const formatCatalogOrder = (dateStr: string) => {
+    if (!dateStr) return '';
+    // מנסה לחלץ מספרים מהתאריך (תומך ב-DD.MM.YYYY או DD/MM/YY וכו')
+    const parts = dateStr.match(/\d+/g);
+    if (!parts || parts.length < 3) return '';
+    
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    let year = parts[2];
+    
+    // אם השנה היא 4 ספרות, לוקחים רק את ה-2 האחרונות
+    if (year.length === 4) year = year.substring(2);
+    else year = year.padStart(2, '0');
+    
+    return `${year}${month}${day}`;
+  };
+
+  // חישוב שדות מורכבים
+  const catalogOrder = formatCatalogOrder(data.exhibition.openDate);
   const slug = data.exhibition.titleEng.toLowerCase().replace(/\s+/g, '-');
   const galleryCaption = `${data.exhibition.titleHeb} | אוצרת: ${data.curator.nameHeb} | ${data.exhibition.openDate}`;
   const artistNamesFormatted = data.artists.map(a => a.nameHeb).join(' | ');
   const curatorFormatted = data.curator.nameHeb ? `אוצרת: ${data.curator.nameHeb}` : '';
   
-  // ניסיון לחלץ אירוע פתיחה מהטקסט הלא מסווג או מהמשמרות
   const openingEvent = data.unmatched.find(l => l.includes('פתיחה') || l.includes('אירוע')) || '';
   const specialEvents = data.unmatched.filter(l => (l.includes('שיח') || l.includes('סיור'))).join('\n') || '';
 
@@ -53,6 +71,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-slate-100">
+          <CMSField label={labels.catalogOrder} value={catalogOrder} description="פורמט: YYMMDD (לפי תאריך פתיחה)" />
           <CMSField label={labels.slug} value={slug} description="סיומת מקוצרת של הלינק (באנגלית)" />
           <CMSField label={labels.googleTitle} value={data.exhibition.titleHeb} description="בעברית ומולטי-לינגואל לתרגום לאנגלית" />
           <CMSField label={labels.galleryCaption} value={galleryCaption} description="שם התערוכה | אוצר: שם מלא | תאריך" />

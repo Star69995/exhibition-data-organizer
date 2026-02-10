@@ -1,6 +1,7 @@
 export const displaySettings = {
   labels: {
     // קבוצה 1: הגדרות כלליות (ויקס 1+2)
+    catalogOrder: "סדר הופעה בקטלוג",
     slug: "Slug (סיומת הקישור)",
     googleTitle: "שם התערוכה לגוגל",
     galleryCaption: "כותרת מתחת לתמונה בגלריה",
