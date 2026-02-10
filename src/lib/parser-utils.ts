@@ -98,7 +98,6 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
   const pressFullMatch = text.match(/טקסט להודעה לעיתונות([\s\S]*?)(?=טקסט מקוצר|$)/);
   if (pressFullMatch) {
     let content = pressFullMatch[1];
-    // הסרת הנחיית ה"4-5 משפטים" עד "בתיאום עם האוצר"
     content = content.replace(/ההודעה לעיתונות יכולה להיות[\s\S]*?בתיאום עם האוצר\./, '');
     data.pressRelease.full = content.trim();
   }
@@ -107,8 +106,9 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
   const pressShortMatch = text.match(/טקסט מקוצר להזמנה[\s\S]*?([^\n][\s\S]*?)(?=פרטי הדימויים|$)/);
   if (pressShortMatch) {
     let content = pressShortMatch[1];
-    // הסרת הנחיית ה"2-4 משפטים" עד "על ידי צוות הגלריה"
+    // הסרת כל סוגי הנחיות הכתיבה
     content = content.replace(/טקסט בין 2-4 משפטים[\s\S]*?על ידי צוות הגלריה\./, '');
+    content = content.replace(/טקסט בין 2-4 משפטים שנגזר מההודעה לעיתונות[\s\S]*?צוות הגלריה\./, '');
     data.pressRelease.short = content.trim();
   }
 
