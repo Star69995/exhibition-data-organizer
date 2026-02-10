@@ -31,10 +31,14 @@ const CMSField = ({ label, value, description, isLong = false }: { label: string
 const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   const { labels } = displaySettings;
 
+  // פונקציה לניקוי והמרת תאריך לפורמט עם נקודות
+  const formatDateWithDots = (dateStr: string) => {
+    return dateStr.replace(/\//g, '.');
+  };
+
   // פונקציה להמרת תאריך לפורמט YYMMDD
   const formatCatalogOrder = (dateStr: string) => {
     if (!dateStr) return '';
-    // מנסה לחלץ מספרים מהתאריך (תומך ב-DD.MM.YYYY או DD/MM/YY וכו')
     const parts = dateStr.match(/\d+/g);
     if (!parts || parts.length < 3) return '';
     
@@ -42,7 +46,6 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
     const month = parts[1].padStart(2, '0');
     let year = parts[2];
     
-    // אם השנה היא 4 ספרות, לוקחים רק את ה-2 האחרונות
     if (year.length === 4) year = year.substring(2);
     else year = year.padStart(2, '0');
     
@@ -52,7 +55,10 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   // חישוב שדות מורכבים
   const catalogOrder = formatCatalogOrder(data.exhibition.openDate);
   const slug = data.exhibition.titleEng.toLowerCase().replace(/\s+/g, '-');
-  const galleryCaption = `${data.exhibition.titleHeb} | אוצרת: ${data.curator.nameHeb} | ${data.exhibition.openDate}`;
+  const openDateDots = formatDateWithDots(data.exhibition.openDate);
+  const closeDateDots = formatDateWithDots(data.exhibition.closeDate);
+  
+  const galleryCaption = `${data.exhibition.titleHeb} | אוצרת: ${data.curator.nameHeb} | ${openDateDots}`;
   const artistNamesFormatted = data.artists.map(a => a.nameHeb).join(' | ');
   const curatorFormatted = data.curator.nameHeb ? `אוצרת: ${data.curator.nameHeb}` : '';
   
@@ -80,7 +86,7 @@ const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
             <CMSField label={labels.titleLarge + " - שחור/לבן"} value={data.exhibition.titleHeb} />
             <CMSField label={labels.titleSmall + " - שחור/לבן"} value={data.exhibition.titleEng} />
           </div>
-          <CMSField label={labels.dates} value={`${data.exhibition.openDate}-${data.exhibition.closeDate}`} />
+          <CMSField label={labels.dates} value={`${openDateDots}-${closeDateDots}`} />
         </CardContent>
       </Card>
 
