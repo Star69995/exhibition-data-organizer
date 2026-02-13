@@ -1,15 +1,11 @@
 /**
  * Clean text and extract value based on label.
- * Handles cases where another field might start on the same line (e.g., '. שם באנגלית:')
  */
 export const extractValue = (text: string, label: string): string => {
-  // Look for the label followed by optional separator
-  // Stop at a newline OR at the start of another common label
   const regex = new RegExp(`${label}\\s*[:\\-]?\\s*([^\\n\\.]*(?:\\.[^\\n\\.]*)*?)(?=\\s*(?:שם באנגלית|טלפון|מייל|אינסטגרם|אמנ\\.ית|$))`, 'i');
   const match = text.match(regex);
   if (!match) return '';
   
-  // Extra check for the "English name" often being appended with a dot
   let val = match[1].trim();
   if (val.endsWith('.')) val = val.slice(0, -1);
   return val.trim();
@@ -87,19 +83,23 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
   const artistParts = text.split(/אמנ\.ית\s*\d+/);
   if (artistParts.length > 1) {
     artistParts.slice(1).forEach((block, i) => {
-      data.artists.push({
-        id: `artist-${i}`,
-        nameHeb: extractValue(block, 'שם בעברית'),
-        nameEng: extractValue(block, 'שם באנגלית'),
-        phone: extractValue(block, 'טלפון'),
-        email: extractValue(block, 'מייל'),
-        website: block.match(/https?:\/\/[^\s\n]+/)?.[0] || '',
-        instagram: '',
-      });
+      const nameHeb = extractValue(block, 'שם בעברית');
+      const nameEng = extractValue(block, 'שם באנגלית');
+      if (nameHeb || nameEng) {
+        data.artists.push({
+          id: `artist-${i}`,
+          nameHeb,
+          nameEng,
+          phone: extractValue(block, 'טלפון'),
+          email: extractValue(block, 'מייל'),
+          website: block.match(/https?:\/\/[^\s\n]+/)?.[0] || '',
+          instagram: '',
+        });
+      }
     });
   }
 
-  // Find instagram handles (usually starting with @)
+  // Find instagram handles
   const instaMatches = text.match(/@[\w\.]+/g);
   if (instaMatches) {
     instaMatches.forEach((handle, i) => {
@@ -121,11 +121,27 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  // Find events - improved filtering to avoid grabbing long press text
-  const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה', 'תאריך'];
+  // Refined Event Filter: Exclude headers, placeholders, and dates already captured in main exhibition details
+  const excludeKeywords = ['תאריך פתיחה', 'תאריך נעילה', 'אירוע שיח:', 'הופעה:', 'תאריך טרם נקבע', 'פרטי התערוכה', 'כל תערוכה צריכה'];
+  const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה'];
+  
   data.events = lines
-    .filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 3 && l.length < 100)
-    .map(l => l.trim().replace(/^[-*]\s*/, ''));
+    .map(l => l.trim())
+    .filter(l => 
+      l.length > 3 && 
+      eventKeywords.some(k => l.includes(k)) && 
+      !excludeKeywords.some(e => l.includes(e))
+    )
+    .map(l => l.replace(/^[-*]\s*/, '').replace(/\.$/, ''));
+
+  // Capture shifts separately
+  const shiftsStart = lines.findIndex(l => l.includes('תאריכי משמרות'));
+  if (shiftsStart !== -1) {
+    data.shifts = lines
+      .slice(shiftsStart + 1)
+      .filter(l => l.trim().length > 3 && (l.includes('.') || l.includes('/')))
+      .map(l => l.trim().replace(/\.$/, ''));
+  }
 
   return data;
 };
