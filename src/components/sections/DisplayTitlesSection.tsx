@@ -10,19 +10,27 @@ import { displaySettings } from '@/config/display-settings';
 
 interface Props {
   data: ExhibitionData;
+  isMale: boolean;
 }
 
-const DisplayTitlesSection: React.FC<Props> = ({ data }) => {
+const DisplayTitlesSection: React.FC<Props> = ({ data, isMale }) => {
   const openDate = formatDateWithDots(data.exhibition.openDate);
   const closeDate = formatDateWithDots(data.exhibition.closeDate);
   const datesRange = `${openDate}-${closeDate}`;
   
-  // Hebrew Caption: Title | Curator: Name | Date (No trailing dots)
-  const curatorLabel = "אוצרת"; // In real app, this should sync with the switch in ContentSection, but for CMS display we follow the rule
-  const galleryCaptionHeb = `${cleanText(data.exhibition.titleHeb)} | ${curatorLabel}: ${cleanText(data.curator.nameHeb)} | ${openDate}`;
+  const curatorPrefix = isMale ? "אוצר" : "אוצרת";
   
-  // English Caption: Title | Curator: Name | Date
-  const galleryCaptionEng = `${toUpperCase(data.exhibition.titleEng)} | Curator: ${cleanText(data.curator.nameEng)} | ${openDate}`;
+  // Clean values for caption
+  const titleHeb = cleanText(data.exhibition.titleHeb);
+  const curatorHeb = cleanText(data.curator.nameHeb);
+  const titleEng = toUpperCase(cleanText(data.exhibition.titleEng));
+  const curatorEng = cleanText(data.curator.nameEng);
+
+  // Hebrew Caption: Title | Role: Name | Date
+  const galleryCaptionHeb = `${titleHeb} | ${curatorPrefix}: ${curatorHeb} | ${openDate}`;
+  
+  // English Caption: TITLE | Curator: Name | Date
+  const galleryCaptionEng = `${titleEng} | Curator: ${curatorEng} | ${openDate}`;
 
   return (
     <CMSSectionWrapper 
@@ -38,12 +46,12 @@ const DisplayTitlesSection: React.FC<Props> = ({ data }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mt-2">
-        <CMSField label={`${displaySettings.labels.titleLarge} - שחור`} value={data.exhibition.titleHeb} />
-        <CMSField label={`${displaySettings.labels.titleSmall} - שחור`} value={toUpperCase(data.exhibition.titleEng)} />
+        <CMSField label={`${displaySettings.labels.titleLarge} - שחור`} value={titleHeb} />
+        <CMSField label={`${displaySettings.labels.titleSmall} - שחור`} value={titleEng} />
         <CMSField label={`${displaySettings.labels.dates} - שחור`} value={datesRange} />
         
-        <CMSField label={`${displaySettings.labels.titleLarge} - לבן`} value={data.exhibition.titleHeb} />
-        <CMSField label={`${displaySettings.labels.titleSmall} - לבן`} value={toUpperCase(data.exhibition.titleEng)} />
+        <CMSField label={`${displaySettings.labels.titleLarge} - לבן`} value={titleHeb} />
+        <CMSField label={`${displaySettings.labels.titleSmall} - לבן`} value={titleEng} />
         <CMSField label={`${displaySettings.labels.dates} - לבן`} value={datesRange} />
       </div>
     </CMSSectionWrapper>

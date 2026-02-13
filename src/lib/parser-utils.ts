@@ -1,10 +1,18 @@
 /**
- * Clean text and extract value based on label
+ * Clean text and extract value based on label.
+ * Handles cases where another field might start on the same line (e.g., '. שם באנגלית:')
  */
 export const extractValue = (text: string, label: string): string => {
-  const regex = new RegExp(`${label}\\s*[:\\-]?\\s*([^\\n]*)`, 'i');
+  // Look for the label followed by optional separator
+  // Stop at a newline OR at the start of another common label
+  const regex = new RegExp(`${label}\\s*[:\\-]?\\s*([^\\n\\.]*(?:\\.[^\\n\\.]*)*?)(?=\\s*(?:שם באנגלית|טלפון|מייל|אינסטגרם|אמנ\\.ית|$))`, 'i');
   const match = text.match(regex);
-  return match ? match[1].trim() : '';
+  if (!match) return '';
+  
+  // Extra check for the "English name" often being appended with a dot
+  let val = match[1].trim();
+  if (val.endsWith('.')) val = val.slice(0, -1);
+  return val.trim();
 };
 
 export interface ExhibitionData {
@@ -50,6 +58,7 @@ export interface ExhibitionData {
 
 export const parseExhibitionText = (text: string): ExhibitionData => {
   const lines = text.split('\n');
+  
   const data: ExhibitionData = {
     exhibition: {
       titleHeb: extractValue(text, 'שם התערוכה - עברית'),
@@ -60,7 +69,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     curator: {
       nameHeb: extractValue(text, 'שם בעברית'),
       nameEng: extractValue(text, 'שם באנגלית'),
-      gender: 'female', // Default to female
+      gender: 'female', 
       phone: extractValue(text, 'טלפון'),
       email: extractValue(text, 'מייל'),
       instagram: extractValue(text, 'אינסטגרם'),
@@ -74,9 +83,10 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     unmatched: [],
   };
 
-  const artistBlocks = text.split(/אמנ\.ית\s*\d+/);
-  if (artistBlocks.length > 1) {
-    artistBlocks.slice(1).forEach((block, i) => {
+  // Find all artist blocks
+  const artistParts = text.split(/אמנ\.ית\s*\d+/);
+  if (artistParts.length > 1) {
+    artistParts.slice(1).forEach((block, i) => {
       data.artists.push({
         id: `artist-${i}`,
         nameHeb: extractValue(block, 'שם בעברית'),
@@ -89,7 +99,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  // Find instagram handles
+  // Find instagram handles (usually starting with @)
   const instaMatches = text.match(/@[\w\.]+/g);
   if (instaMatches) {
     instaMatches.forEach((handle, i) => {
@@ -97,16 +107,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  const pressFullMatch = text.match(/טקסט להודעה לעיתונות([\s\S]*?)(?=טקסט מקוצר|$)/);
-  if (pressFullMatch) {
-    data.pressRelease.full = pressFullMatch[1].trim();
-  }
-
-  const pressShortMatch = text.match(/טקסט מקוצר להזמנה[\s\S]*?([^\n][\s\S]*?)(?=פרטי הדימויים|$)/);
-  if (pressShortMatch) {
-    data.pressRelease.short = pressShortMatch[1].trim();
-  }
-
+  // Capture image blocks
   const imageBlocks = text.split(/\d+\.\s*א\.\s*פרטי הדימוי/);
   if (imageBlocks.length > 1) {
     imageBlocks.slice(1).forEach((block, i) => {
@@ -120,8 +121,11 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה'];
-  data.events = lines.filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 5);
+  // Find events - improved filtering to avoid grabbing long press text
+  const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה', 'תאריך'];
+  data.events = lines
+    .filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 3 && l.length < 100)
+    .map(l => l.trim().replace(/^[-*]\s*/, ''));
 
   return data;
 };

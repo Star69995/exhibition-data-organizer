@@ -3,7 +3,7 @@
  */
 
 export const formatDateWithDots = (dateStr: string): string => {
-  return dateStr ? dateStr.replace(/\//g, '.') : '';
+  return dateStr ? dateStr.replace(/\//g, '.').replace(/\.$/, '') : '';
 };
 
 export const formatCatalogOrder = (dateStr: string): string => {
@@ -23,20 +23,24 @@ export const formatCatalogOrder = (dateStr: string): string => {
 
 export const formatArtistNames = (artists: Array<{ nameHeb: string }>): string => {
   if (artists.length === 0) return '';
-  return artists.map(a => a.nameHeb).join(' | ');
+  return artists.map(a => cleanText(a.nameHeb)).join(' | ');
 };
 
 export const formatArtistNamesEng = (artists: Array<{ nameEng: string }>): string => {
   if (artists.length === 0) return '';
-  return artists.map(a => a.nameEng).join(' | ');
+  return artists.map(a => toUpperCase(cleanText(a.nameEng))).join(' | ');
 };
 
 export const formatSlug = (titleEng: string): string => {
   return titleEng.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
 };
 
+/**
+ * Strips whitespace and trailing periods
+ */
 export const cleanText = (text: string): string => {
-  return text ? text.trim().replace(/\.$/, '') : ''; // Remove trailing dot
+  if (!text) return '';
+  return text.trim().replace(/\.$/, '').trim();
 };
 
 export const toUpperCase = (text: string): string => {
