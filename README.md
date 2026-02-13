@@ -1,70 +1,51 @@
-# מארגן נתוני תערוכות | Exhibition Data Organizer 🎨
+# Exhibition Data Organizer 🎨
 
-כלי אוטומטי המיועד לאוצרים וגלריות, המאפשר להפוך טקסט גולמי (מקבצי Word או הדבקה חופשית) לנתונים מאורגנים המוכנים להזנה ישירה למערכות ניהול תוכן (כמו Wix CMS).
+An automated tool designed for curators and galleries, allowing you to transform raw text (from Word files or copy-paste) into organized data ready for direct entry into Content Management Systems (like Wix CMS).
 
-## ✨ יכולות עיקריות
-- **פיענוח אוטומטי:** זיהוי שמות אמנים, אוצרים, תאריכי פתיחה ונעילה.
-- **ניקוי טקסט חכם:** הסרה אוטומטית של הנחיות כתיבה וטקסטים גנריים מהודעות לעיתונות.
-- **ניהול דימויים:** פירסור פרטי דימויים ותיאורי נגישות (עברית ואנגלית).
-- **תמיכה בקבצים:** אפשרות להעלאת קבצי `.docx` (Word) וקריאתם ישירות בדפדפן.
-- **ממשק CMS מוכן:** העתקה מהירה של ערכים מפורמטים (כמו Slug או סדר קטלוגי YYMMDD).
+## ✨ Key Features
+- **Automatic Parsing:** Identification of artist names, curators, opening and closing dates.
+- **Draggable Sorting:** Reorder artists easily for CMS entry.
+- **Smart Formatting:** Automatic removal of trailing dots and specific formatting for gallery captions (Hebrew and English).
+- **Curator Customization:** Toggle between "Curator" and "Curatress" (אוצר/אוצרת) labels.
+- **English Support:** Automatic capitalization for English titles and dedicated translation fields.
+- **File Support:** Upload `.docx` (Word) or `.txt` files directly in the browser.
+- **CMS Ready Interface:** Quick copy buttons for formatted values like Slugs or Catalog Order (YYMMDD).
 
 ---
 
-## 🚀 הרצה מקומית על המחשב
+## 🚀 Local Setup
 
-כדי להריץ את הפרויקט אצלך במחשב, עקוב אחר הצעדים הבאים:
+To run this project locally on your machine:
 
-1. **דרישות קדם:** וודא שמותקן אצלך [Node.js](https://nodejs.org/) ו-[pnpm](https://pnpm.io/).
-2. **התקנת תלויות:**
+1. **Prerequisites:** Ensure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) installed.
+2. **Install Dependencies:**
    ```bash
    pnpm install
    ```
-3. **הרצה במצב פיתוח:**
+3. **Run in Development Mode:**
    ```bash
    pnpm dev
    ```
-4. **צפייה באפליקציה:** פתח את הדפדפן בכתובת: `http://localhost:8080`
+4. **View App:** Open your browser at: `http://localhost:8080`
 
 ---
 
-## 🌐 פריסה ל-GitHub Pages (Deployment)
+## 🌐 Deployment to GitHub Pages
 
-כדי להעלות את האפליקציה לאוויר ולהשתמש בה בכתובת ציבורית של GitHub, בצע את השלבים הבאים:
-
-### 1. הכנת הפרויקט
-וודא שבקובץ `vite.config.ts` מוגדר ה-`base` הנכון:
-```typescript
-// vite.config.ts
-export default defineConfig({
-  base: '/your-repo-name/', // שנה לשם המאגר שלך ב-GitHub
-  // ... rest of config
-});
-```
-
-### 2. התקנת חבילת פריסה (אם טרם הותקנה)
-הרץ את הפקודה הבאה:
-```bash
-pnpm install --save-dev gh-pages
-```
-
-### 3. פריסה לאוויר
-הרץ את הפקודה הבאה:
-```bash
-pnpm deploy
-```
-*(שים לב: הפקודה תריץ אוטומטית build לפני הפריסה הודות לסקריפט ה-predeploy)*
-
-לאחר סיום הפעולה, האתר יהיה זמין בכתובת: `https://your-username.github.io/your-repo-name/`
+1. **Preparation:** Ensure the `base` in `vite.config.ts` matches your repository name.
+2. **Deploy:**
+   ```bash
+   pnpm deploy
+   ```
 
 ---
 
-## 🛠 טכנולוגיות
+## 🛠 Technologies
 - **Framework:** React 19 + Vite
 - **Styling:** Tailwind CSS + shadcn/ui
 - **Icons:** Lucide React
-- **Parsing:** Mammoth.js (עבור קבצי Word)
+- **Parsing:** Mammoth.js (for Word files)
 - **Deployment:** GitHub Pages
 
 ---
-**פותח עבור אוצרים וגלריות בישראל כדי לחסוך זמן יקר ולהפחית שגיאות אנוש בהזנת נתונים.**
+**Developed for curators and galleries to save valuable time and reduce human error in data entry.**

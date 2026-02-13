@@ -1,5 +1,5 @@
 /**
- * פונקציה לניקוי טקסט והוצאת ערך לפי תווית
+ * Clean text and extract value based on label
  */
 export const extractValue = (text: string, label: string): string => {
   const regex = new RegExp(`${label}\\s*[:\\-]?\\s*([^\\n]*)`, 'i');
@@ -17,12 +17,14 @@ export interface ExhibitionData {
   curator: {
     nameHeb: string;
     nameEng: string;
+    gender: 'male' | 'female';
     phone: string;
     email: string;
     instagram: string;
     website: string;
   };
   artists: Array<{
+    id: string;
     nameHeb: string;
     nameEng: string;
     phone: string;
@@ -58,6 +60,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     curator: {
       nameHeb: extractValue(text, 'שם בעברית'),
       nameEng: extractValue(text, 'שם באנגלית'),
+      gender: 'female', // Default to female
       phone: extractValue(text, 'טלפון'),
       email: extractValue(text, 'מייל'),
       instagram: extractValue(text, 'אינסטגרם'),
@@ -71,11 +74,11 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     unmatched: [],
   };
 
-  // פירסור אמנים
   const artistBlocks = text.split(/אמנ\.ית\s*\d+/);
   if (artistBlocks.length > 1) {
-    artistBlocks.slice(1).forEach(block => {
+    artistBlocks.slice(1).forEach((block, i) => {
       data.artists.push({
+        id: `artist-${i}`,
         nameHeb: extractValue(block, 'שם בעברית'),
         nameEng: extractValue(block, 'שם באנגלית'),
         phone: extractValue(block, 'טלפון'),
@@ -86,7 +89,7 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  // שיוך אינסטגרם
+  // Find instagram handles
   const instaMatches = text.match(/@[\w\.]+/g);
   if (instaMatches) {
     instaMatches.forEach((handle, i) => {
@@ -94,25 +97,16 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  // פירסור וניקוי הודעה לעיתונות
   const pressFullMatch = text.match(/טקסט להודעה לעיתונות([\s\S]*?)(?=טקסט מקוצר|$)/);
   if (pressFullMatch) {
-    let content = pressFullMatch[1];
-    content = content.replace(/ההודעה לעיתונות יכולה להיות[\s\S]*?בתיאום עם האוצר\./, '');
-    data.pressRelease.full = content.trim();
+    data.pressRelease.full = pressFullMatch[1].trim();
   }
 
-  // פירסור וניקוי טקסט מקוצר
   const pressShortMatch = text.match(/טקסט מקוצר להזמנה[\s\S]*?([^\n][\s\S]*?)(?=פרטי הדימויים|$)/);
   if (pressShortMatch) {
-    let content = pressShortMatch[1];
-    // הסרת כל סוגי הנחיות הכתיבה
-    content = content.replace(/טקסט בין 2-4 משפטים[\s\S]*?על ידי צוות הגלריה\./, '');
-    content = content.replace(/טקסט בין 2-4 משפטים שנגזר מההודעה לעיתונות[\s\S]*?צוות הגלריה\./, '');
-    data.pressRelease.short = content.trim();
+    data.pressRelease.short = pressShortMatch[1].trim();
   }
 
-  // פירסור דימויים
   const imageBlocks = text.split(/\d+\.\s*א\.\s*פרטי הדימוי/);
   if (imageBlocks.length > 1) {
     imageBlocks.slice(1).forEach((block, i) => {
@@ -126,20 +120,8 @@ export const parseExhibitionText = (text: string): ExhibitionData => {
     });
   }
 
-  // משמרות ואירועים
-  const shiftText = text.match(/תאריכי משמרות([\s\S]*?)(?=אירוע שיח|$)/);
-  if (shiftText) data.shifts = shiftText[1].trim().split('\n').filter(l => l.trim());
-
   const eventKeywords = ['שיח', 'סיור', 'הופעה', 'מפגש', 'פתיחה'];
-  data.events = lines.filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 5 && !l.includes('כותרת') && !l.includes('כל תערוכה צריכה'));
-
-  // שורות שלא סווגו
-  const knownKeywords = ['שם', 'תאריך', 'אוצר', 'אמן', 'מייל', 'טלפון', 'אינסטגרם', 'דימוי', 'נגישות', 'משמרות', 'הודעה'];
-  data.unmatched = lines.filter(line => {
-    const trimmed = line.trim();
-    if (trimmed.length < 10) return false;
-    return !knownKeywords.some(key => trimmed.includes(key));
-  }).slice(0, 15);
+  data.events = lines.filter(l => eventKeywords.some(k => l.includes(k)) && l.length > 5);
 
   return data;
 };

@@ -5,9 +5,7 @@ import { ExhibitionData } from '@/lib/parser-utils';
 import BasicSettingsSection from './sections/BasicSettingsSection';
 import DisplayTitlesSection from './sections/DisplayTitlesSection';
 import ContentSection from './sections/ContentSection';
-import PressSection from './sections/PressSection';
 import ImagesSection from './sections/ImagesSection';
-import ExtraInfoSection from './sections/ExtraInfoSection';
 import SpecialEventsSection from './sections/SpecialEventsSection';
 
 interface Props {
@@ -17,25 +15,19 @@ interface Props {
 const ExhibitionDisplay: React.FC<Props> = ({ data }) => {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20" dir="rtl">
-      {/* ויקס 1: הגדרות בסיסיות */}
+      {/* Vix 1: Basic Settings */}
       <BasicSettingsSection data={data} />
 
-      {/* ויקס 2: כותרות ותאריכים */}
+      {/* Vix 2: Titles and Dates */}
       <DisplayTitlesSection data={data} />
 
-      {/* ויקס 3: שמות ותוכן */}
+      {/* Vix 3: Names and Content */}
       <ContentSection data={data} />
 
-      {/* ויקס 4: אירועים מיוחדים */}
+      {/* Vix 4: Special Events */}
       <SpecialEventsSection data={data} />
 
-      {/* טקסטים להודעה לעיתונות */}
-      <PressSection data={data} />
-
-      {/* נתונים נוספים ומשמרות */}
-      <ExtraInfoSection data={data} />
-
-      {/* פרטי דימויים */}
+      {/* Image Details for Accessibility */}
       <ImagesSection data={data} />
     </div>
   );

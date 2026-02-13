@@ -1,5 +1,5 @@
 /**
- * פונקציות עזר לפירמוט נתונים עבור ה-CMS
+ * Utility functions for formatting CMS data
  */
 
 export const formatDateWithDots = (dateStr: string): string => {
@@ -15,7 +15,6 @@ export const formatCatalogOrder = (dateStr: string): string => {
   const month = parts[1].padStart(2, '0');
   let year = parts[2];
   
-  // תמיכה בשנים בפורמט 2024 או 24
   if (year.length === 4) year = year.substring(2);
   else year = year.padStart(2, '0');
   
@@ -24,7 +23,12 @@ export const formatCatalogOrder = (dateStr: string): string => {
 
 export const formatArtistNames = (artists: Array<{ nameHeb: string }>): string => {
   if (artists.length === 0) return '';
-  return artists.map(a => a.nameHeb).join(' | ') + ' |';
+  return artists.map(a => a.nameHeb).join(' | ');
+};
+
+export const formatArtistNamesEng = (artists: Array<{ nameEng: string }>): string => {
+  if (artists.length === 0) return '';
+  return artists.map(a => a.nameEng).join(' | ');
 };
 
 export const formatSlug = (titleEng: string): string => {
@@ -32,5 +36,9 @@ export const formatSlug = (titleEng: string): string => {
 };
 
 export const cleanText = (text: string): string => {
-  return text ? text.trim() : '';
+  return text ? text.trim().replace(/\.$/, '') : ''; // Remove trailing dot
+};
+
+export const toUpperCase = (text: string): string => {
+  return text ? text.toUpperCase() : '';
 };
