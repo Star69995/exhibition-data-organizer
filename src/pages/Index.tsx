@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { parseExhibitionText, ExhibitionData } from '@/lib/parser-utils';
 import ExhibitionDisplay from '@/components/ExhibitionDisplay';
-import { FileText, Trash2, Sparkles } from 'lucide-react';
+import { FileText, Trash2, Sparkles, Upload } from 'lucide-react';
 import mammoth from 'mammoth';
 import { showSuccess, showError } from '@/utils/toast';
 import FileDropZone from '@/components/FileDropZone';
