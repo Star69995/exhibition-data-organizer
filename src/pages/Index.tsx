@@ -72,60 +72,65 @@ const Index = () => {
             מעבד נתוני תערוכות
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            הדבק טקסט גולמי או העלה קובץ Word כדי לסדר מחדש את כל פרטי התערוכה, האמנים והדימויים באופן אוטומטי.
+            העלו קובץ Word או הדביקו טקסט גולמי כדי לסדר את כל פרטי התערוכה באופן אוטומטי.
           </p>
         </div>
 
         {!parsedData ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="shadow-xl border-none overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-bold flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary" />
-                        הדבק טקסט כאן:
-                      </label>
-                      <Button variant="ghost" size="sm" onClick={handleClear} className="text-destructive hover:bg-destructive/5">
-                        <Trash2 className="ml-2 h-4 w-4" />
-                        נקה
-                      </Button>
-                    </div>
-                    
-                    <Textarea
-                      placeholder="הדבק כאן את הטקסט הגולמי של התערוכה..."
-                      className="min-h-[400px] text-right font-mono text-sm leading-relaxed border-slate-200 focus:ring-primary shadow-inner"
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                    />
-                    
-                    <Button 
-                      className="w-full py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
-                      onClick={handleProcess}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'מעבד נתונים...' : 'סדר לי את התערוכה! ✨'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="space-y-8">
+            {/* Upload Section at the Top */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold flex items-center gap-2 px-1">
+                <Upload className="h-5 w-5 text-primary" />
+                העלאת קבצים
+              </h3>
+              <FileDropZone onFileSelect={processFile} className="bg-white" />
+              <p className="text-center text-sm text-slate-500 italic">
+                העלאת קובץ תמלא אוטומטית את תיבת הטקסט למטה
+              </p>
             </div>
 
-            <div className="space-y-6">
-              <div className="sticky top-8">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-primary" />
-                  העלאת קבצים
-                </h3>
-                <FileDropZone onFileSelect={processFile} />
-                
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800">
-                  <p className="font-bold mb-1">טיפ:</p>
-                  <p>אפשר להעלות קבצי Word (docx) או קבצי טקסט פשוטים. המערכת תזהה את המידע באופן אוטומטי.</p>
-                </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-slate-50 px-4 text-slate-500 font-bold uppercase tracking-wider">או הדבקה ידנית</span>
               </div>
             </div>
+
+            {/* Text Input Section */}
+            <Card className="shadow-xl border-none overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-bold flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      עריכת טקסט:
+                    </label>
+                    <Button variant="ghost" size="sm" onClick={handleClear} className="text-destructive hover:bg-destructive/5">
+                      <Trash2 className="ml-2 h-4 w-4" />
+                      נקה הכל
+                    </Button>
+                  </div>
+                  
+                  <Textarea
+                    placeholder="הדבק כאן את הטקסט הגולמי או ערוך את הטקסט שנטען מהקובץ..."
+                    className="min-h-[300px] text-right font-mono text-sm leading-relaxed border-slate-200 focus:ring-primary shadow-inner bg-slate-50/30"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                  />
+                  
+                  <Button 
+                    className="w-full py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
+                    onClick={handleProcess}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? 'מעבד נתונים...' : 'סדר לי את התערוכה! ✨'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <div className="space-y-6">
