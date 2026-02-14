@@ -14,14 +14,15 @@ const Index = () => {
   const [parsedData, setParsedData] = useState<ExhibitionData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleProcess = () => {
-    if (!inputText.trim()) {
+  const handleProcess = (textToProcess?: string) => {
+    const text = textToProcess ?? inputText;
+    if (!text.trim()) {
       showError('אנא הזן טקסט או העלה קובץ');
       return;
     }
     setIsProcessing(true);
     try {
-      const data = parseExhibitionText(inputText);
+      const data = parseExhibitionText(text);
       setParsedData(data);
       showSuccess('הטקסט פוענח בהצלחה!');
     } catch (error) {
@@ -32,6 +33,7 @@ const Index = () => {
   };
 
   const processFile = async (file: File) => {
+    setIsProcessing(true);
     if (file.name.endsWith('.docx')) {
       const reader = new FileReader();
       reader.onload = async (event) => {
@@ -40,16 +42,20 @@ const Index = () => {
           const result = await mammoth.extractRawText({ arrayBuffer });
           setInputText(result.value);
           showSuccess('קובץ ה-Word נקרא בהצלחה');
+          handleProcess(result.value);
         } catch (err) {
           showError('שגיאה בקריאת קובץ ה-Word');
+          setIsProcessing(false);
         }
       };
       reader.readAsArrayBuffer(file);
     } else {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setInputText(event.target?.result as string);
+        const text = event.target?.result as string;
+        setInputText(text);
         showSuccess('קובץ הטקסט נקרא בהצלחה');
+        handleProcess(text);
       };
       reader.readAsText(file);
     }
@@ -86,7 +92,7 @@ const Index = () => {
               </h3>
               <FileDropZone onFileSelect={processFile} className="bg-white" />
               <p className="text-center text-sm text-slate-500 italic">
-                העלאת קובץ תמלא אוטומטית את תיבת הטקסט למטה
+                העלאת קובץ תעבד ותציג את הנתונים באופן מיידי
               </p>
             </div>
 
@@ -123,7 +129,7 @@ const Index = () => {
                   
                   <Button 
                     className="w-full py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
-                    onClick={handleProcess}
+                    onClick={() => handleProcess()}
                     disabled={isProcessing}
                   >
                     {isProcessing ? 'מעבד נתונים...' : 'סדר לי את התערוכה! ✨'}
