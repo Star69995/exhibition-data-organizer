@@ -110,7 +110,7 @@ const Index = () => {
               <CardContent className="p-0">
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-bold flex items-center gap-2">
+                    <label htmlFor="exhibition-text-input" className="text-sm font-bold flex items-center gap-2">
                       <FileText className="h-4 w-4 text-primary" />
                       עריכת טקסט:
                     </label>
@@ -119,8 +119,9 @@ const Index = () => {
                       נקה הכל
                     </Button>
                   </div>
-                  
+
                   <Textarea
+                    id="exhibition-text-input"
                     placeholder="הדבק כאן את הטקסט הגולמי או ערוך את הטקסט שנטען מהקובץ..."
                     className="min-h-[300px] text-right font-mono text-sm leading-relaxed border-slate-200 focus:ring-primary shadow-inner bg-slate-50/30"
                     value={inputText}

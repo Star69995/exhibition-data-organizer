@@ -53,6 +53,9 @@ const FileDropZone: React.FC<FileDropZoneProps> = ({ onFileSelect, className }) 
     >
       <input
         type="file"
+        id="exhibition-file-upload"
+        name="exhibition-file-upload"
+        aria-label="העלאת קובץ תערוכה (docx או txt)"
         className="absolute inset-0 opacity-0 cursor-pointer"
         accept=".docx,.txt"
         onChange={handleFileInput}

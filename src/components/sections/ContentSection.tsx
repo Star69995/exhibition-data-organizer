@@ -4,17 +4,20 @@ import React from 'react';
 import { Users } from 'lucide-react';
 import CMSField from '../CMSField';
 import CMSSectionWrapper from './CMSSectionWrapper';
+import ArtistReorderList from '../ArtistReorderList';
 import { ExhibitionData } from '@/lib/parser-utils';
 import { formatArtistNames, formatArtistNamesEng, formatDateWithDots, cleanText } from '@/lib/formatter-utils';
 
 interface Props {
   data: ExhibitionData;
   isMale: boolean;
+  artists: ExhibitionData['artists'];
+  onArtistsReorder: (artists: ExhibitionData['artists']) => void;
 }
 
-const ContentSection: React.FC<Props> = ({ data, isMale }) => {
-  const artistsHeb = formatArtistNames(data.artists);
-  const artistsEng = formatArtistNamesEng(data.artists);
+const ContentSection: React.FC<Props> = ({ data, isMale, artists, onArtistsReorder }) => {
+  const artistsHeb = formatArtistNames(artists);
+  const artistsEng = formatArtistNamesEng(artists);
   
   const curatorRoleHeb = isMale ? "אוצר" : "אוצרת";
   const curatorNameHeb = cleanText(data.curator.nameHeb);
@@ -32,10 +35,15 @@ const ContentSection: React.FC<Props> = ({ data, isMale }) => {
       textColor="text-indigo-800"
       description="פרטי אמנים, אוצרים ואירוע פתיחה"
     >
+      <ArtistReorderList artists={artists} onReorder={onArtistsReorder} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-        <CMSField label="שם | שם בעברית (אמנים)" value={artistsHeb} />
-        <CMSField label="Name | Name in English (Artists)" value={artistsEng} />
-        
+        <CMSField label="שם (אמנים)" value={artistsHeb} />
+        <CMSField label="Name (Artists)" value={artistsEng} />
+
+        <CMSField label="שם בעברית (אמנים)" value={artistsHeb} />
+        <CMSField label="Name in English (Artists)" value={artistsEng} />
+
         <CMSField label="שם האוצר (עברית)" value={`${curatorRoleHeb}: ${curatorNameHeb}`} />
         <CMSField label="Curator Name (English)" value={`Curator: ${curatorNameEng}`} />
         
